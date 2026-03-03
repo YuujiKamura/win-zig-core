@@ -6,6 +6,10 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+if (-not $RepoRoot) {
+    $RepoRoot = Split-Path -Parent $PSScriptRoot
+}
+
 function Find-Winmd {
     $base = Join-Path $env:USERPROFILE ".nuget\packages\microsoft.windowsappsdk"
     if (-not (Test-Path -LiteralPath $base)) {
@@ -43,7 +47,7 @@ if (-not (Test-Path -LiteralPath $comPath)) {
 $generated = $null
 Push-Location $toolDir
 try {
-    $generated = & zig build run -- --emit-tabview-delegate-zig $WinmdPath 2>$null
+    $generated = & zig build run -- --emit-tabview-delegate-zig $WinmdPath
     if ($LASTEXITCODE -ne 0) {
         throw "Failed to generate delegate IID constants from winmd2zig"
     }
@@ -90,7 +94,4 @@ if ($updated -ne $text) {
     Write-Host "Updated: $comPath"
 } else {
     Write-Host "No changes: $comPath"
-}
-if (-not $RepoRoot) {
-    $RepoRoot = Split-Path -Parent $PSScriptRoot
 }

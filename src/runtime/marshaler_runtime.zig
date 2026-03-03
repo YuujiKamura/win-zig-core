@@ -110,10 +110,31 @@ const MarshalerBox = struct {
 };
 
 fn getCoCreateFreeThreadedMarshaler() ?CoCreateFreeThreadedMarshalerFn {
-    const dll_name = std.unicode.utf8ToUtf16LeStringLiteral("combase.dll");
-    const module = std.os.windows.kernel32.LoadLibraryW(dll_name) orelse return null;
-    const proc = std.os.windows.kernel32.GetProcAddress(module, "CoCreateFreeThreadedMarshaler") orelse return null;
-    return @ptrCast(proc);
+    const State = struct {
+        var lock: std.Thread.Mutex = .{};
+        var resolved: bool = false;
+        var proc: ?CoCreateFreeThreadedMarshalerFn = null;
+    };
+
+    State.lock.lock();
+    defer State.lock.unlock();
+
+    if (!State.resolved) {
+        const dll_name = std.unicode.utf8ToUtf16LeStringLiteral("combase.dll");
+        const module = std.os.windows.kernel32.GetModuleHandleW(dll_name) orelse
+            std.os.windows.kernel32.LoadLibraryW(dll_name) orelse {
+                State.resolved = true;
+                return null;
+            };
+        const proc = std.os.windows.kernel32.GetProcAddress(module, "CoCreateFreeThreadedMarshaler") orelse {
+            State.resolved = true;
+            return null;
+        };
+        State.proc = @ptrCast(proc);
+        State.resolved = true;
+    }
+
+    return State.proc;
 }
 
 pub fn queryInterfaceAsMarshaler(
@@ -159,4 +180,3 @@ pub fn queryInterfaceAsMarshaler(
     ppv.* = @ptrCast(&box.com);
     return rt.S_OK;
 }
-

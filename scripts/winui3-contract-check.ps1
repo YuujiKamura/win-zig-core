@@ -159,12 +159,3 @@ $md -join "`r`n" | Set-Content -Path $OutReport -Encoding UTF8
 Write-Host "OVERALL: $overall (pass=$passCount fail=$failCount)"
 Write-Host "REPORT: $OutReport"
 if ($failCount -gt 0) { exit 1 }
-if (-not $RepoRoot) {
-    $RepoRoot = Split-Path -Parent $PSScriptRoot
-}
-if (-not $ContractPath) {
-    $ContractPath = Join-Path $RepoRoot "contracts\winui-contract.json"
-}
-if (-not $OutReport) {
-    $OutReport = Join-Path $RepoRoot "tmp\winui3-contract-report.md"
-}
