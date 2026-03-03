@@ -4,6 +4,15 @@ const rt = @import("com_runtime.zig");
 const log = std.log.scoped(.winui3);
 
 const CoCreateFreeThreadedMarshalerFn = *const fn (?*anyopaque, *?*anyopaque) callconv(.winapi) rt.HRESULT;
+const ResolveProcFn = *const fn () ?CoCreateFreeThreadedMarshalerFn;
+
+const ResolverState = struct {
+    var lock: std.Thread.Mutex = .{};
+    var resolved: bool = false;
+    var proc: ?CoCreateFreeThreadedMarshalerFn = null;
+    var resolver: ResolveProcFn = &defaultResolveProc;
+    var resolve_calls: u32 = 0;
+};
 
 const IMarshalVTable = extern struct {
     QueryInterface: *const fn (*anyopaque, *const rt.GUID, *?*anyopaque) callconv(.winapi) rt.HRESULT,
@@ -109,32 +118,59 @@ const MarshalerBox = struct {
     }
 };
 
+fn defaultResolveProc() ?CoCreateFreeThreadedMarshalerFn {
+    const dll_name = std.unicode.utf8ToUtf16LeStringLiteral("combase.dll");
+    const module = std.os.windows.kernel32.GetModuleHandleW(dll_name) orelse
+        std.os.windows.kernel32.LoadLibraryW(dll_name) orelse return null;
+    const proc = std.os.windows.kernel32.GetProcAddress(module, "CoCreateFreeThreadedMarshaler") orelse return null;
+    return @ptrCast(proc);
+}
+
 fn getCoCreateFreeThreadedMarshaler() ?CoCreateFreeThreadedMarshalerFn {
-    const State = struct {
-        var lock: std.Thread.Mutex = .{};
-        var resolved: bool = false;
-        var proc: ?CoCreateFreeThreadedMarshalerFn = null;
-    };
+    ResolverState.lock.lock();
+    defer ResolverState.lock.unlock();
 
-    State.lock.lock();
-    defer State.lock.unlock();
-
-    if (!State.resolved) {
-        const dll_name = std.unicode.utf8ToUtf16LeStringLiteral("combase.dll");
-        const module = std.os.windows.kernel32.GetModuleHandleW(dll_name) orelse
-            std.os.windows.kernel32.LoadLibraryW(dll_name) orelse {
-                State.resolved = true;
-                return null;
-            };
-        const proc = std.os.windows.kernel32.GetProcAddress(module, "CoCreateFreeThreadedMarshaler") orelse {
-            State.resolved = true;
-            return null;
-        };
-        State.proc = @ptrCast(proc);
-        State.resolved = true;
+    if (!ResolverState.resolved) {
+        ResolverState.resolve_calls += 1;
+        ResolverState.proc = ResolverState.resolver();
+        ResolverState.resolved = true;
     }
 
-    return State.proc;
+    return ResolverState.proc;
+}
+
+pub fn testSetResolver(resolver: ResolveProcFn) void {
+    ResolverState.lock.lock();
+    defer ResolverState.lock.unlock();
+    ResolverState.resolver = resolver;
+    ResolverState.resolved = false;
+    ResolverState.proc = null;
+    ResolverState.resolve_calls = 0;
+}
+
+pub fn testResetResolver() void {
+    ResolverState.lock.lock();
+    defer ResolverState.lock.unlock();
+    ResolverState.resolver = &defaultResolveProc;
+    ResolverState.resolved = false;
+    ResolverState.proc = null;
+    ResolverState.resolve_calls = 0;
+}
+
+pub fn testGetResolveCallCount() u32 {
+    ResolverState.lock.lock();
+    defer ResolverState.lock.unlock();
+    return ResolverState.resolve_calls;
+}
+
+pub fn testGetCachedProc() ?CoCreateFreeThreadedMarshalerFn {
+    ResolverState.lock.lock();
+    defer ResolverState.lock.unlock();
+    return ResolverState.proc;
+}
+
+pub fn testResolveForUnit() ?CoCreateFreeThreadedMarshalerFn {
+    return getCoCreateFreeThreadedMarshaler();
 }
 
 pub fn queryInterfaceAsMarshaler(

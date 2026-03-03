@@ -4,6 +4,30 @@ const marshaler = @import("marshaler_runtime.zig");
 
 const log = std.log.scoped(.winui3);
 
+pub fn isKnownProbeIid(riid: *const rt.GUID) bool {
+    const iid_ino_marshal = rt.GUID{
+        .Data1 = 0xecc8691b,
+        .Data2 = 0xc1db,
+        .Data3 = 0x4dc0,
+        .Data4 = .{ 0x85, 0x5e, 0x65, 0xf6, 0xc5, 0x51, 0xaf, 0x49 },
+    };
+    const iid_iglobal_interface_table = rt.GUID{
+        .Data1 = 0x00000146,
+        .Data2 = 0x0000,
+        .Data3 = 0x0000,
+        .Data4 = .{ 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46 },
+    };
+    const iid_istd_marshal_info = rt.GUID{
+        .Data1 = 0x00000018,
+        .Data2 = 0x0000,
+        .Data3 = 0x0000,
+        .Data4 = .{ 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46 },
+    };
+    return rt.guidEql(riid, &iid_ino_marshal) or
+        rt.guidEql(riid, &iid_iglobal_interface_table) or
+        rt.guidEql(riid, &iid_istd_marshal_info);
+}
+
 pub fn TypedDelegate(comptime Context: type, comptime CallbackFn: type) type {
     return struct {
         const Self = @This();
@@ -98,19 +122,21 @@ pub fn TypedDelegate(comptime Context: type, comptime CallbackFn: type) type {
                 return marshaler.queryInterfaceAsMarshaler(self.allocator, this, ppv);
             }
 
-            log.warn("delegate QI unknown iid={{{x:0>8}-{x:0>4}-{x:0>4}-{x:0>2}{x:0>2}-{x:0>2}{x:0>2}{x:0>2}{x:0>2}{x:0>2}{x:0>2}}}", .{
-                riid.Data1,
-                riid.Data2,
-                riid.Data3,
-                riid.Data4[0],
-                riid.Data4[1],
-                riid.Data4[2],
-                riid.Data4[3],
-                riid.Data4[4],
-                riid.Data4[5],
-                riid.Data4[6],
-                riid.Data4[7],
-            });
+            if (!isKnownProbeIid(riid)) {
+                log.warn("delegate QI unknown iid={{{x:0>8}-{x:0>4}-{x:0>4}-{x:0>2}{x:0>2}-{x:0>2}{x:0>2}{x:0>2}{x:0>2}{x:0>2}{x:0>2}}}", .{
+                    riid.Data1,
+                    riid.Data2,
+                    riid.Data3,
+                    riid.Data4[0],
+                    riid.Data4[1],
+                    riid.Data4[2],
+                    riid.Data4[3],
+                    riid.Data4[4],
+                    riid.Data4[5],
+                    riid.Data4[6],
+                    riid.Data4[7],
+                });
+            }
             ppv.* = null;
             return rt.E_NOINTERFACE;
         }
