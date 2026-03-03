@@ -1,0 +1,8 @@
+.zig-cache/
+zig-out/
+zig-cache/
+tmp/
+*.pdb
+*.obj
+*.ilk
+*.exe

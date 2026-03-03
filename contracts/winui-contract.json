@@ -1,0 +1,44 @@
+{
+  "name": "winui3-host-contract",
+  "required_artifact_filenames": [
+    "Microsoft.WindowsAppRuntime.Bootstrap.dll",
+    "ghostty.manifest"
+  ],
+  "required_reference_filenames": [
+    "App.winmd",
+    "MainWindow.winmd",
+    "XamlMetaDataProvider.winmd",
+    "WinUI3Ref.winmd"
+  ],
+  "source_must_contain": [
+    {
+      "file": "src/apprt/winui3/delegate_runtime.zig",
+      "pattern": "delegate_iid"
+    },
+    {
+      "file": "src/apprt/winui3/App.zig",
+      "pattern": "createWithIid"
+    },
+    {
+      "file": "src/apprt/winui3/com.zig",
+      "pattern": "IID_TypedEventHandler_TabCloseRequested"
+    },
+    {
+      "file": "src/apprt/winui3/com.zig",
+      "pattern": "IID_TypedEventHandler_AddTabButtonClick"
+    },
+    {
+      "file": "src/apprt/winui3/com.zig",
+      "pattern": "IID_SelectionChangedEventHandler"
+    }
+  ],
+  "line_order_checks": [
+    {
+      "file": "src/apprt/winui3/App.zig",
+      "first_pattern": "Step 8: Create the initial Surface",
+      "second_pattern": "Register TabView event handlers",
+      "expectation": "first_before_second",
+      "description": "Control tree creation should be completed before handler registration."
+    }
+  ]
+}
