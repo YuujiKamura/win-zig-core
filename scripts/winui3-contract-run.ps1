@@ -2,7 +2,9 @@ param(
     [string]$RepoRoot = "",
     [string]$BuildRoot = "",
     [switch]$Build,
-    [switch]$Fix
+    [switch]$Fix,
+    [switch]$SkipReference,
+    [switch]$SkipExtractIids
 )
 
 $ErrorActionPreference = "Stop"
@@ -32,10 +34,21 @@ if ($Fix) {
 $checkArgs = @()
 if ($Build) { $checkArgs += "-Build" }
 if ($BuildRoot) { $checkArgs += @("-BuildRoot", $BuildRoot) }
+if ($SkipReference) { $checkArgs += "-SkipReference" }
 pwsh -File "$repo\scripts\winui3-contract-check.ps1" @checkArgs
 $checkExit = $LASTEXITCODE
 pwsh -File "$repo\scripts\winui3-delegate-iid-check.ps1" -RepoRoot $repo
 $iidExit = $LASTEXITCODE
-pwsh -File "$repo\scripts\winui3-extract-iids.ps1" 2>$null
+$extractExit = 0
+if (-not $SkipExtractIids) {
+    $defaultLog = Join-Path $repo "debug.log"
+    if (Test-Path -LiteralPath $defaultLog) {
+        pwsh -File "$repo\scripts\winui3-extract-iids.ps1" 2>$null
+        $extractExit = $LASTEXITCODE
+    } else {
+        Write-Host "winui3-contract-run: SKIP extract-iids (debug.log not found)"
+    }
+}
 if ($checkExit -ne 0) { exit $checkExit }
 if ($iidExit -ne 0) { exit $iidExit }
+if ($extractExit -ne 0) { exit $extractExit }

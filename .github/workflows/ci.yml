@@ -21,3 +21,6 @@ jobs:
       - name: Contract check (skip reference artifacts)
         shell: pwsh
         run: ./scripts/winui3-contract-check.ps1 -SkipReference
+      - name: Contract run smoke (skip reference/extract)
+        shell: pwsh
+        run: ./scripts/winui3-contract-run.ps1 -SkipReference -SkipExtractIids
