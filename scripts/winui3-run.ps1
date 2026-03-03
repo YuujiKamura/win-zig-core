@@ -1,6 +1,19 @@
+param(
+    [string]$GhosttyRoot = ""
+)
+
 $ErrorActionPreference = "Stop"
 
-$repoRoot = Split-Path -Parent $PSScriptRoot
+$scriptRepoRoot = Split-Path -Parent $PSScriptRoot
+if (-not $GhosttyRoot) {
+    $siblingGhostty = Join-Path (Split-Path -Parent $scriptRepoRoot) "ghostty-win"
+    if (Test-Path -LiteralPath (Join-Path $siblingGhostty "build.zig")) {
+        $GhosttyRoot = $siblingGhostty
+    } else {
+        $GhosttyRoot = $scriptRepoRoot
+    }
+}
+$repoRoot = $GhosttyRoot
 $exe = Join-Path $repoRoot "zig-out\\bin\\ghostty.exe"
 $stateDir = Join-Path $repoRoot "tmp"
 $pidFile = Join-Path $stateDir "ghostty-winui3.pid"

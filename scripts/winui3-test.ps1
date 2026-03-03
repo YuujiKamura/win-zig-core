@@ -1,7 +1,8 @@
 param(
     [string]$Filter = "*",
     [switch]$NoBuild,
-    [int]$Timeout = 15000
+    [int]$Timeout = 15000,
+    [string]$GhosttyRoot = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -17,7 +18,16 @@ function Out-Line([string]$msg, [string]$Color = "") {
 }
 
 # ── Config ─────────────────────────────────────────────────────
-$repoRoot = Split-Path -Parent $PSScriptRoot
+$scriptRepoRoot = Split-Path -Parent $PSScriptRoot
+if (-not $GhosttyRoot) {
+    $siblingGhostty = Join-Path (Split-Path -Parent $scriptRepoRoot) "ghostty-win"
+    if (Test-Path -LiteralPath (Join-Path $siblingGhostty "build.zig")) {
+        $GhosttyRoot = $siblingGhostty
+    } else {
+        $GhosttyRoot = $scriptRepoRoot
+    }
+}
+$repoRoot = $GhosttyRoot
 $exePath  = Join-Path $repoRoot "zig-out\bin\ghostty.exe"
 $tmpDir   = Join-Path $repoRoot "tmp"
 $debugLogPath = Join-Path $repoRoot "debug.log"

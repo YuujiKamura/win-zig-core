@@ -19,6 +19,10 @@
 - `scripts/winui3-contract-run.ps1`
 - `zig build test` (runtime-only unit tests)
 
+Notes:
+- `scripts/winui3-test.ps1` / `scripts/winui3-run.ps1` accept `-GhosttyRoot` (defaults to sibling `../ghostty-win` if present).
+- `scripts/winui3-contract-check.ps1` / `scripts/winui3-contract-run.ps1` accept `-BuildRoot` for WinUI3 app build location.
+
 ## Migration note
 
 Source snapshot copied from `ghostty-win` commit `fe9218c`.

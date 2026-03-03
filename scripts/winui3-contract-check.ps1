@@ -2,6 +2,7 @@ param(
     [string]$RepoRoot = "",
     [string]$RefRoot = "C:\Users\yuuji\winui3-reference",
     [string]$ContractPath = "",
+    [string]$BuildRoot = "",
     [switch]$Build,
     [switch]$SkipReference,
     [string]$OutReport = ""
@@ -18,17 +19,24 @@ if (-not $ContractPath) {
 if (-not $OutReport) {
     $OutReport = Join-Path $RepoRoot "tmp\winui3-contract-report.md"
 }
+if (-not $BuildRoot) {
+    $BuildRoot = $RepoRoot
+}
 
 if (-not (Test-Path -LiteralPath $ContractPath)) { throw "Contract not found: $ContractPath" }
 if (-not (Test-Path -LiteralPath $RepoRoot)) { throw "RepoRoot not found: $RepoRoot" }
+if (-not (Test-Path -LiteralPath $BuildRoot)) { throw "BuildRoot not found: $BuildRoot" }
 if (-not $SkipReference -and -not (Test-Path -LiteralPath $RefRoot)) { throw "RefRoot not found: $RefRoot" }
 
 $contract = Get-Content -Raw -Path $ContractPath | ConvertFrom-Json
 
 if ($Build) {
-    Push-Location $RepoRoot
+    Push-Location $BuildRoot
     try {
         zig build -Dapp-runtime=winui3 -Drenderer=d3d11 | Out-Null
+        if ($LASTEXITCODE -ne 0) {
+            throw "Build failed (exit code $LASTEXITCODE) at BuildRoot=$BuildRoot"
+        }
     }
     finally {
         Pop-Location
