@@ -1,8 +1,12 @@
 const std = @import("std");
-const winrt = @import("winrt.zig");
 
-pub const HRESULT = winrt.HRESULT;
-pub const GUID = winrt.GUID;
+pub const HRESULT = i32;
+pub const GUID = extern struct {
+    Data1: u32,
+    Data2: u16,
+    Data3: u16,
+    Data4: [8]u8,
+};
 
 pub const S_OK: HRESULT = 0;
 pub const E_NOINTERFACE: HRESULT = @bitCast(@as(u32, 0x80004002));

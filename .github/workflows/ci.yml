@@ -13,10 +13,11 @@ jobs:
         uses: mlugg/setup-zig@v2
         with:
           version: 0.15.2
+      - name: Runtime unit tests
+        run: zig build test
       - name: Delegate IID check
         shell: pwsh
         run: ./scripts/winui3-delegate-iid-check.ps1
       - name: Contract check (skip reference artifacts)
         shell: pwsh
         run: ./scripts/winui3-contract-check.ps1 -SkipReference
-

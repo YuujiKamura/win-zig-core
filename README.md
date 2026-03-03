@@ -17,6 +17,7 @@
 
 - `scripts/winui3-test.ps1`
 - `scripts/winui3-contract-run.ps1`
+- `zig build test` (runtime-only unit tests)
 
 ## Migration note
 
