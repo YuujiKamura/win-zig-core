@@ -2,12 +2,15 @@
 
 `win-zig-core` is the WinRT/COM runtime wiring layer for Zig.
 
-## Current Scope (snapshot)
+## Current Scope (split)
 
-- Delegate runtime ABI (`src/winui3/delegate_runtime.zig`)
-- COM runtime helpers (`src/winui3/com_runtime.zig`)
-- Marshaler runtime (`src/winui3/marshaler_runtime.zig`)
-- WinUI3 host integration snapshot (`src/winui3/App.zig`, related files)
+- Runtime layer (`src/runtime/`)
+  - `delegate_runtime.zig`
+  - `com_runtime.zig`
+  - `marshaler_runtime.zig`
+  - `event.zig`
+- Sample host layer (`src/sample-host/winui3/`)
+  - `App.zig`, `com.zig`, `com_aggregation.zig`, `os.zig`, `debug_harness.zig`
 - Contract/smoke scripts (`scripts/winui3-*.ps1`)
 
 ## Validation

@@ -1,9 +1,17 @@
 param(
-    [string]$LogPath = "C:\Users\yuuji\ghostty-win\debug.log",
-    [string]$OutJson = "C:\Users\yuuji\ghostty-win\tmp\winui3-iids.json"
+    [string]$LogPath = "",
+    [string]$OutJson = ""
 )
 
 $ErrorActionPreference = "Stop"
+if (-not $LogPath) {
+    $repo = Split-Path -Parent $PSScriptRoot
+    $LogPath = Join-Path $repo "debug.log"
+}
+if (-not $OutJson) {
+    $repo = Split-Path -Parent $PSScriptRoot
+    $OutJson = Join-Path $repo "tmp\winui3-iids.json"
+}
 
 if (-not (Test-Path -LiteralPath $LogPath)) {
     throw "Log not found: $LogPath"

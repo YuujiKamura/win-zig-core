@@ -1,0 +1,22 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Zig
+        uses: mlugg/setup-zig@v2
+        with:
+          version: 0.15.2
+      - name: Delegate IID check
+        shell: pwsh
+        run: ./scripts/winui3-delegate-iid-check.ps1
+      - name: Contract check (skip reference artifacts)
+        shell: pwsh
+        run: ./scripts/winui3-contract-check.ps1 -SkipReference
+

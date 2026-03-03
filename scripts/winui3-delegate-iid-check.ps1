@@ -1,9 +1,12 @@
 param(
-    [string]$RepoRoot = "C:\Users\yuuji\ghostty-win",
+    [string]$RepoRoot = "",
     [string]$WinmdPath = ""
 )
 
 $ErrorActionPreference = "Stop"
+if (-not $RepoRoot) {
+    $RepoRoot = Split-Path -Parent $PSScriptRoot
+}
 
 $syncScript = Join-Path $RepoRoot "scripts\winui3-sync-delegate-iids.ps1"
 if (-not (Test-Path -LiteralPath $syncScript)) {
@@ -25,4 +28,3 @@ if ($exitCode -ne 0) {
 
 Write-Host "winui3-delegate-iid-check: PASS"
 exit 0
-

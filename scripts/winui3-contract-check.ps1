@@ -1,16 +1,27 @@
 param(
-    [string]$RepoRoot = "C:\Users\yuuji\ghostty-win",
+    [string]$RepoRoot = "",
     [string]$RefRoot = "C:\Users\yuuji\winui3-reference",
-    [string]$ContractPath = "C:\Users\yuuji\ghostty-win\contracts\winui-contract.json",
+    [string]$ContractPath = "",
     [switch]$Build,
-    [string]$OutReport = "C:\Users\yuuji\ghostty-win\tmp\winui3-contract-report.md"
+    [switch]$SkipReference,
+    [string]$OutReport = ""
 )
 
 $ErrorActionPreference = "Stop"
 
+if (-not $RepoRoot) {
+    $RepoRoot = Split-Path -Parent $PSScriptRoot
+}
+if (-not $ContractPath) {
+    $ContractPath = Join-Path $RepoRoot "contracts\winui-contract.json"
+}
+if (-not $OutReport) {
+    $OutReport = Join-Path $RepoRoot "tmp\winui3-contract-report.md"
+}
+
 if (-not (Test-Path -LiteralPath $ContractPath)) { throw "Contract not found: $ContractPath" }
 if (-not (Test-Path -LiteralPath $RepoRoot)) { throw "RepoRoot not found: $RepoRoot" }
-if (-not (Test-Path -LiteralPath $RefRoot)) { throw "RefRoot not found: $RefRoot" }
+if (-not $SkipReference -and -not (Test-Path -LiteralPath $RefRoot)) { throw "RefRoot not found: $RefRoot" }
 
 $contract = Get-Content -Raw -Path $ContractPath | ConvertFrom-Json
 
@@ -32,9 +43,15 @@ $refJson = Join-Path $tmpDir "ref-artifacts.json"
 $tgtJson = Join-Path $tmpDir "ghostty-artifacts.json"
 $diffMd = Join-Path $tmpDir "winui3-artifact-diff.md"
 
-pwsh -File (Join-Path $RepoRoot "scripts\winui3-capture-artifacts.ps1") -Root $RefRoot -OutFile $refJson | Out-Null
+if (-not $SkipReference) {
+    pwsh -File (Join-Path $RepoRoot "scripts\winui3-capture-artifacts.ps1") -Root $RefRoot -OutFile $refJson | Out-Null
+} else {
+    @() | ConvertTo-Json | Set-Content -Path $refJson -Encoding UTF8
+}
 pwsh -File (Join-Path $RepoRoot "scripts\winui3-capture-artifacts.ps1") -Root $RepoRoot -OutFile $tgtJson | Out-Null
-pwsh -File (Join-Path $RepoRoot "scripts\winui3-diff-artifacts.ps1") -ReferenceJson $refJson -TargetJson $tgtJson -OutReport $diffMd | Out-Null
+if (-not $SkipReference) {
+    pwsh -File (Join-Path $RepoRoot "scripts\winui3-diff-artifacts.ps1") -ReferenceJson $refJson -TargetJson $tgtJson -OutReport $diffMd | Out-Null
+}
 
 $ref = Get-Content -Raw -Path $refJson | ConvertFrom-Json
 $tgt = Get-Content -Raw -Path $tgtJson | ConvertFrom-Json
@@ -69,6 +86,10 @@ foreach ($name in $contract.required_artifact_filenames) {
 }
 
 foreach ($name in $contract.required_reference_filenames) {
+    if ($SkipReference) {
+        Add-Result -Category "artifact-reference" -Item $name -Pass $true -Detail "skipped"
+        continue
+    }
     $key = $name.ToLowerInvariant()
     $ok = $refNames.ContainsKey($key)
     $detail = if ($ok) { "found in reference" } else { "missing in reference build output" }
@@ -138,3 +159,12 @@ $md -join "`r`n" | Set-Content -Path $OutReport -Encoding UTF8
 Write-Host "OVERALL: $overall (pass=$passCount fail=$failCount)"
 Write-Host "REPORT: $OutReport"
 if ($failCount -gt 0) { exit 1 }
+if (-not $RepoRoot) {
+    $RepoRoot = Split-Path -Parent $PSScriptRoot
+}
+if (-not $ContractPath) {
+    $ContractPath = Join-Path $RepoRoot "contracts\winui-contract.json"
+}
+if (-not $OutReport) {
+    $OutReport = Join-Path $RepoRoot "tmp\winui3-contract-report.md"
+}

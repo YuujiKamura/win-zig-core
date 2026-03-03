@@ -1,5 +1,5 @@
 param(
-    [string]$RepoRoot = "C:\Users\yuuji\ghostty-win",
+    [string]$RepoRoot = "",
     [string]$WinmdPath = "",
     [switch]$Check
 )
@@ -30,8 +30,12 @@ if (-not (Test-Path -LiteralPath $WinmdPath)) {
     throw "WinMD not found: $WinmdPath"
 }
 
-$toolDir = Join-Path $RepoRoot "tools\winmd2zig"
-$comPath = Join-Path $RepoRoot "src\apprt\winui3\com.zig"
+$toolDir = Join-Path (Split-Path -Parent $RepoRoot) "win-zig-bindgen"
+$comPath = Join-Path $RepoRoot "src\sample-host\winui3\com.zig"
+if (-not (Test-Path -LiteralPath $toolDir)) {
+    Write-Host "winui3-sync-delegate-iids: SKIP (bindgen repo not found at $toolDir)"
+    exit 0
+}
 if (-not (Test-Path -LiteralPath $comPath)) {
     throw "com.zig not found: $comPath"
 }
@@ -86,4 +90,7 @@ if ($updated -ne $text) {
     Write-Host "Updated: $comPath"
 } else {
     Write-Host "No changes: $comPath"
+}
+if (-not $RepoRoot) {
+    $RepoRoot = Split-Path -Parent $PSScriptRoot
 }
