@@ -60,12 +60,12 @@ if ($LASTEXITCODE -ne 0) {
     throw "ghostty delegate IID check failed"
 }
 
-Write-Host "[CHECK] ghostty inspect-event-params smoke"
-pwsh -File (Join-Path $GhosttyRoot "scripts\winui3-inspect-event-params.ps1") `
+Write-Host "[CHECK] ghostty WinUI3 contract build check"
+pwsh -File (Join-Path $GhosttyRoot "scripts\winui3-contract-check.ps1") `
     -RepoRoot $GhosttyRoot `
-    -ToolDir $BindgenRoot
+    -Build
 if ($LASTEXITCODE -ne 0) {
-    throw "ghostty inspect-event-params failed"
+    throw "ghostty WinUI3 contract build check failed"
 }
 
 $contractArgs = @("-RepoRoot", $CoreRoot, "-BuildRoot", $GhosttyRoot, "-SkipExtractIids")

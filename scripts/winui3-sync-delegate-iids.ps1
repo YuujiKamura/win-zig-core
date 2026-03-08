@@ -44,10 +44,10 @@ if (-not (Test-Path -LiteralPath $comPath)) {
     throw "com.zig not found: $comPath"
 }
 
-$generated = $null
+$generatedPath = Join-Path ([System.IO.Path]::GetTempPath()) ("core-sync-iids-" + [System.Guid]::NewGuid().ToString("N") + ".zig")
 Push-Location $toolDir
 try {
-    $generated = & zig build run -- --emit-tabview-delegate-zig $WinmdPath
+    & zig build run -- --winmd $WinmdPath --deploy $generatedPath --iface ITabView
     if ($LASTEXITCODE -ne 0) {
         throw "Failed to generate delegate IID constants from winmd2zig"
     }
@@ -55,13 +55,22 @@ try {
 finally {
     Pop-Location
 }
+if (-not (Test-Path -LiteralPath $generatedPath)) {
+    throw "Generated file not found: $generatedPath"
+}
+$generated = Get-Content -LiteralPath $generatedPath
+Remove-Item -LiteralPath $generatedPath -ErrorAction SilentlyContinue
 
 $text = Get-Content -Raw -LiteralPath $comPath
 
+function Normalize-GuidLine([string]$line) {
+    return $line.Replace(".data1", ".Data1").Replace(".data2", ".Data2").Replace(".data3", ".Data3").Replace(".data4", ".Data4")
+}
+
 $map = @{
-    "IID_TypedEventHandler_AddTabButtonClick" = ($generated | Select-String "IID_TypedEventHandler_AddTabButtonClick").Line
-    "IID_SelectionChangedEventHandler" = ($generated | Select-String "IID_SelectionChangedEventHandler").Line
-    "IID_TypedEventHandler_TabCloseRequested" = ($generated | Select-String "IID_TypedEventHandler_TabCloseRequested").Line
+    "IID_TypedEventHandler_AddTabButtonClick" = Normalize-GuidLine (($generated | Select-String "IID_TypedEventHandler_AddTabButtonClick").Line)
+    "IID_SelectionChangedEventHandler" = Normalize-GuidLine (($generated | Select-String "IID_SelectionChangedEventHandler").Line)
+    "IID_TypedEventHandler_TabCloseRequested" = Normalize-GuidLine (($generated | Select-String "IID_TypedEventHandler_TabCloseRequested").Line)
 }
 
 foreach ($k in $map.Keys) {
