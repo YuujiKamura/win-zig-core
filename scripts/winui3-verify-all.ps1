@@ -24,13 +24,13 @@ foreach ($p in @($CoreRoot, $GhosttyRoot, $BindgenRoot, $MetadataRoot)) {
     }
 }
 
-function Run-ZigTest([string]$repoPath) {
+function Run-ZigStep([string]$repoPath, [string[]]$zigArgs, [string]$label) {
     Push-Location $repoPath
     try {
-        Write-Host "[TEST] zig build test @ $repoPath"
-        zig build test
+        Write-Host "[$label] zig $($zigArgs -join ' ') @ $repoPath"
+        & zig @zigArgs
         if ($LASTEXITCODE -ne 0) {
-            throw "zig build test failed at: $repoPath"
+            throw "zig $($zigArgs -join ' ') failed at: $repoPath"
         }
     }
     finally {
@@ -38,9 +38,9 @@ function Run-ZigTest([string]$repoPath) {
     }
 }
 
-Run-ZigTest $MetadataRoot
-Run-ZigTest $BindgenRoot
-Run-ZigTest $CoreRoot
+Run-ZigStep $MetadataRoot @("build", "test") "TEST"
+Run-ZigStep $BindgenRoot @("build", "gate") "GATE"
+Run-ZigStep $CoreRoot @("build", "test") "TEST"
 
 $ghosttyCom = Join-Path $GhosttyRoot "src\apprt\winui3\com.zig"
 

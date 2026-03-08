@@ -18,6 +18,7 @@
 - `scripts/winui3-test.ps1`
 - `scripts/winui3-contract-run.ps1`
 - `zig build test` (runtime-only unit tests)
+- `scripts/winui3-verify-all.ps1` (cross-repo acceptance SSOT)
 
 Notes:
 - `scripts/winui3-test.ps1` / `scripts/winui3-run.ps1` accept `-GhosttyRoot` (defaults to sibling `../ghostty-win` if present).
@@ -28,18 +29,17 @@ Notes:
 
 ## Recommended Run Order
 
-1. `win-zig-metadata`: `zig build test`
-2. `win-zig-bindgen`: `zig build test`
-3. `win-zig-bindgen`: `pwsh -File .\scripts\winui3-sync-delegate-iids.ps1 -Check`
-4. `ghostty-win`: `pwsh -File .\scripts\winui3-delegate-iid-check.ps1`
-5. `ghostty-win`: `pwsh -File .\scripts\winui3-inspect-event-params.ps1`
-6. `win-zig-core`: `pwsh -File .\scripts\winui3-contract-run.ps1 -SkipReference -SkipExtractIids`
+1. `win-zig-bindgen`: `zig build gate`
+2. `ghostty-win`: `pwsh -File .\scripts\winui3-contract-check.ps1 -Build`
+3. `win-zig-core`: `pwsh -File .\scripts\winui3-verify-all.ps1`
 
 One-command orchestration from `win-zig-core`:
 
 ```powershell
 pwsh -File .\scripts\winui3-verify-all.ps1
 ```
+
+Treat `winui3-verify-all.ps1` as the acceptance SSOT for this workspace.
 
 ## Migration note
 
