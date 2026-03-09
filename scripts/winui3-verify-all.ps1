@@ -78,4 +78,12 @@ if ($LASTEXITCODE -ne 0) {
     throw "win-zig-core contract-run failed"
 }
 
+Write-Host "[CHECK] generated-first acceptance"
+pwsh -File (Join-Path $CoreRoot "scripts\winui3-generated-first-check.ps1") `
+    -GhosttyRoot $GhosttyRoot `
+    -BindgenRoot $BindgenRoot
+if ($LASTEXITCODE -ne 0) {
+    throw "generated-first acceptance check failed"
+}
+
 Write-Host "[DONE] winui3-verify-all succeeded"
