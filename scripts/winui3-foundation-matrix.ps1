@@ -1,9 +1,14 @@
 param(
-    [string]$ExePath = "C:\Users\yuuji\ghostty-win\zig-out\bin\ghostty.exe",
+    [string]$ExePath = "",
     [int]$WaitSeconds = 8
 )
 
 $ErrorActionPreference = "Stop"
+
+if (-not $ExePath) {
+    $repoRoot = Join-Path (Split-Path -Parent (Split-Path -Parent $PSScriptRoot)) "ghostty-win"
+    $ExePath = Join-Path $repoRoot "zig-out\bin\ghostty.exe"
+}
 
 function Run-Case {
     param(

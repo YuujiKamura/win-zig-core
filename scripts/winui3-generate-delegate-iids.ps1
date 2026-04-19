@@ -1,11 +1,18 @@
 param(
-    [string]$RepoRoot = "C:\Users\yuuji\ghostty-win",
-    [string]$ExePath = "C:\Users\yuuji\ghostty-win\zig-out\bin\ghostty.exe",
+    [string]$RepoRoot = "",
+    [string]$ExePath = "",
     [int]$WaitSeconds = 6,
     [switch]$BuildFirst
 )
 
 $ErrorActionPreference = "Stop"
+
+if (-not $RepoRoot) {
+    $RepoRoot = Join-Path (Split-Path -Parent (Split-Path -Parent $PSScriptRoot)) "ghostty-win"
+}
+if (-not $ExePath) {
+    $ExePath = Join-Path $RepoRoot "zig-out\bin\ghostty.exe"
+}
 
 if ($BuildFirst) {
     Push-Location $RepoRoot

@@ -3,10 +3,15 @@ param(
     [string]$ReferenceJson,
     [Parameter(Mandatory = $true)]
     [string]$TargetJson,
-    [string]$OutReport = "C:\Users\yuuji\ghostty-win\tmp\winui3-artifact-diff.md"
+    [string]$OutReport = ""
 )
 
 $ErrorActionPreference = "Stop"
+
+if (-not $OutReport) {
+    $repoRoot = Join-Path (Split-Path -Parent (Split-Path -Parent $PSScriptRoot)) "ghostty-win"
+    $OutReport = Join-Path $repoRoot "tmp\winui3-artifact-diff.md"
+}
 
 if (-not (Test-Path -LiteralPath $ReferenceJson)) { throw "Reference json not found: $ReferenceJson" }
 if (-not (Test-Path -LiteralPath $TargetJson)) { throw "Target json not found: $TargetJson" }

@@ -1,8 +1,12 @@
 param(
-    [string]$RepoRoot = "C:\Users\yuuji\ghostty-win"
+    [string]$RepoRoot = ""
 )
 
 $ErrorActionPreference = "Stop"
+
+if (-not $RepoRoot) {
+    $RepoRoot = Join-Path (Split-Path -Parent (Split-Path -Parent $PSScriptRoot)) "ghostty-win"
+}
 $appPath = Join-Path $RepoRoot "src\apprt\winui3\App.zig"
 if (-not (Test-Path -LiteralPath $appPath)) {
     throw "App.zig not found: $appPath"
